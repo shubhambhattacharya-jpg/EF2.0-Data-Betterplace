@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee Data Lookup</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F3F0;--surface:#fff;--surface2:#F9F8F6;--surface3:#F1F0EC;
+  --border:rgba(0,0,0,0.08);--border-s:rgba(0,0,0,0.14);
+  --text:#1A1917;--muted:#6B6A66;--faint:#9B9A96;
+  --accent:#0F6E56;--accent-bg:#E1F5EE;--accent-mid:#5DCAA5;--accent-dk:#085041;
+  --warn:#BA7517;--warn-bg:#FAEEDA;
+  --err:#A32D2D;--err-bg:#FCEBEB;
+  --info:#185FA5;--info-bg:#E6F1FB;
+  --r:10px;--rs:6px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#111110;--surface:#1C1C1A;--surface2:#232321;--surface3:#2A2A28;
+  --border:rgba(255,255,255,0.08);--border-s:rgba(255,255,255,0.14);
+  --text:#F0EFEA;--muted:#9B9A96;--faint:#6B6A66;
+  --accent:#5DCAA5;--accent-bg:#04342C;--accent-mid:#1D9E75;--accent-dk:#9FE1CB;
+  --warn:#EF9F27;--warn-bg:#412402;
+  --err:#E24B4A;--err-bg:#501313;
+  --info:#378ADD;--info-bg:#042C53;
+}}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;color:var(--text);text-decoration:none}
+.logo-mark{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:15px;height:15px;fill:white}
+.hdr-r{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--faint)}
+.dot.live{background:var(--accent-mid)}
+main{max-width:1000px;margin:0 auto;padding:2rem 1.5rem}
+.pg-t{font-size:21px;font-weight:600;margin-bottom:3px}
+.pg-s{font-size:13px;color:var(--muted);margin-bottom:1.75rem}
+.alert{padding:11px 14px;border-radius:var(--rs);font-size:13px;display:flex;align-items:flex-start;gap:9px;margin-bottom:1rem}
+.alert svg{width:14px;height:14px;flex-shrink:0;margin-top:1px}
+.alert-warn{background:var(--warn-bg);color:var(--warn)}
+.alert-err{background:var(--err-bg);color:var(--err)}
+.search-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.4rem 1.5rem;margin-bottom:1.5rem}
+.f-lbl{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;display:block}
+.input-row{display:flex;gap:10px;align-items:flex-start}
+textarea{flex:1;font-family:'DM Mono',monospace;font-size:13px;background:var(--surface2);border:1px solid var(--border-s);border-radius:var(--rs);padding:10px 12px;color:var(--text);resize:vertical;min-height:88px;line-height:1.9;outline:none;transition:border-color .15s}
+textarea::placeholder{color:var(--faint)}
+textarea:focus{border-color:var(--accent-mid)}
+.btns{display:flex;flex-direction:column;gap:8px}
+button{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-radius:var(--rs);padding:9px 18px;border:none;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--accent);color:#fff}
+.btn-p:hover{opacity:.87}
+.btn-p:active{transform:scale(.98)}
+.btn-p:disabled{opacity:.4;cursor:not-allowed}
+.btn-g{background:transparent;color:var(--muted);border:1px solid var(--border-s)}
+.btn-g:hover{background:var(--surface2);color:var(--text)}
+.hints{display:flex;gap:12px;margin-top:9px;flex-wrap:wrap}
+.hint{font-size:11.5px;color:var(--faint)}
+.prog{height:2px;background:var(--accent);width:0%;transition:width .3s;border-radius:1px;margin-bottom:1.5rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px}
+.stat-l{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
+.stat-v{font-size:22px;font-weight:600;line-height:1.2}
+.stat-s{font-size:11px;color:var(--faint);margin-top:1px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;gap:8px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:500;padding:2px 9px;border-radius:20px}
+.bg{background:var(--accent-bg);color:var(--accent-dk)}
+.br{background:var(--err-bg);color:var(--err)}
+.view-toggle{display:flex;border:1px solid var(--border-s);border-radius:var(--rs);overflow:hidden}
+.vt{background:transparent;border:none;padding:5px 12px;font-size:12px;color:var(--muted);cursor:pointer;border-radius:0}
+.vt.on{background:var(--accent);color:#fff}
+.exp-btn{font-size:12px;font-weight:500;color:var(--muted);background:none;border:1px solid var(--border-s);padding:5px 12px;border-radius:var(--rs);cursor:pointer}
+.exp-btn:hover{background:var(--surface)}
+.records{display:flex;flex-direction:column;gap:1rem}
+.rec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.rec-hdr{background:var(--accent-bg);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.rec-email{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--accent-dk)}
+.rec-n{font-size:11px;color:var(--accent-dk);opacity:.7}
+.rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.rec-f{padding:10px 18px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.rec-k{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px}
+.rec-v{font-size:13px;color:var(--text);word-break:break-word;line-height:1.5}
+.rec-v.em{color:var(--faint);font-style:italic}
+.rec-v.ev{font-family:'DM Mono',monospace;font-size:12px;color:var(--accent)}
+.nf-card{background:var(--err-bg);border:1px solid rgba(163,45,45,.15);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:10px}
+.nf-card svg{width:14px;height:14px;color:var(--err);flex-shrink:0}
+.nf-card span{font-size:13px;color:var(--err)}
+.nf-card code{font-family:'DM Mono',monospace;font-size:12px}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead tr{background:var(--surface2);border-bottom:1px solid var(--border-s)}
+th{padding:9px 14px;text-align:left;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.tbl-em{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--accent)}
+.empty{padding:56px 20px;text-align:center;color:var(--muted)}
+.ei{width:48px;height:48px;margin:0 auto 14px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.ei svg{width:22px;height:22px;opacity:.3}
+.et{font-size:15px;font-weight:500;margin-bottom:5px}
+.es{font-size:13px;color:var(--faint)}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+footer{text-align:center;padding:1.5rem;font-size:11.5px;color:var(--faint);border-top:1px solid var(--border);margin-top:2.5rem}
+@media(max-width:600px){.input-row{flex-direction:column}.btns{flex-direction:row}main{padding:1rem}}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">
+    <div class="logo-mark"><svg viewBox="0 0 16 16"><path d="M2 3h12a1 1 0 0 1 1 1v1.5L8 9.5 1 5.5V4a1 1 0 0 1 1-1zm-1 4.2 6.5 3.8a1 1 0 0 0 1 0L15 7.2V12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V7.2z"/></svg></div>
+    DataLookup
+  </a>
+  <div class="hdr-r"><div class="dot" id="sdot"></div><span id="slabel">Connecting…</span></div>
+</header>
+
+<main>
+  <div class="pg-t">Employee Data Lookup</div>
+  <div class="pg-s">Paste one or more email IDs to retrieve full records.</div>
+  <div id="alert-area"></div>
+
+  <div class="search-card">
+    <label class="f-lbl">Email Address(es)</label>
+    <div class="input-row">
+      <textarea id="ei" placeholder="john@example.com&#10;jane@example.com&#10;&#10;One per line or comma-separated"></textarea>
+      <div class="btns">
+        <button class="btn-p" id="sbtn" onclick="doSearch()">Search</button>
+        <button class="btn-g" onclick="clearAll()">Clear</button>
+      </div>
+    </div>
+    <div class="hints">
+      <span class="hint">One email per line or comma-separated</span>
+      <span class="hint">·</span>
+      <span class="hint">Only your queried records are shown</span>
+      <span class="hint">·</span>
+      <span class="hint">Ctrl+Enter to search</span>
+    </div>
+  </div>
+
+  <div class="prog" id="prog"></div>
+  <div id="stats-area" style="display:none"><div class="stats" id="stats"></div></div>
+  <div id="output"></div>
+</main>
+
+<footer>Records fetched live from Google Sheets · Only queried emails are displayed · No data stored locally</footer>
+
+<script>
+const SHEET_ID='1RR-DtFTZSqAUZ4FONmCVD0oMmviNdZ-CA1Eqvh1aM9M';
+const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+const EMAIL_COL=4;
+const PROXIES=[
+  u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+];
+let allData=[],headers=[],loaded=false,viewMode='card',_found=[],_nf=[];
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function setStatus(s,t){$('sdot').className='dot'+(s==='live'?' live':'');$('slabel').textContent=t;}
+function showAlert(t,m){$('alert-area').innerHTML=`<div class="alert alert-${t}"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg><span>${m}</span></div>`;}
+
+function parseCSV(txt){
+  const rows=[];let row=[],cell='',inQ=false;
+  for(let i=0;i<txt.length;i++){
+    const c=txt[i];
+    if(c==='"'){if(inQ&&txt[i+1]==='"'){cell+='"';i++;}else inQ=!inQ;}
+    else if(c===','&&!inQ){row.push(cell.trim());cell='';}
+    else if((c==='\n'||c==='\r')&&!inQ){
+      if(c==='\r'&&txt[i+1]==='\n')i++;
+      row.push(cell.trim());rows.push(row);row=[];cell='';
+    }else cell+=c;
+  }
+  if(cell||row.length){row.push(cell.trim());if(row.some(x=>x))rows.push(row);}
+  return rows;
+}
+
+function isValidCSV(t){
+  if(!t||t.length<10) return false;
+  const s=t.trimStart();
+  // reject HTML responses
+  if(s.startsWith('<')||s.toLowerCase().startsWith('<!doctype')) return false;
+  return true;
+}
+
+async function fetchCSV(){
+  const urls=[
+    // gviz endpoint often bypasses CORS on public sheets
+    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`,
+    CSV_URL,
+  ];
+  // try direct fetches first
+  for(const u of urls){
+    try{
+      const r=await fetch(u,{signal:AbortSignal.timeout(7000)});
+      if(r.ok){const t=await r.text();if(isValidCSV(t))return t;}
+    }catch(_){}
+  }
+  // try proxies on both URLs
+  for(const p of PROXIES){
+    for(const u of urls){
+      try{
+        const r=await fetch(p(u),{signal:AbortSignal.timeout(9000)});
+        if(r.ok){const t=await r.text();if(isValidCSV(t))return t;}
+      }catch(_){}
+    }
+  }
+  throw new Error('Unable to load sheet data. Please make sure the sheet is set to <b>Published to the web</b> (File → Share → Publish to web → CSV) and try again.');
+}
+
+async function loadSheet(){
+  setStatus('loading','Loading data…');
+  try{
+    const txt=await fetchCSV();
+    const rows=parseCSV(txt);
+    if(rows.length<2)throw new Error('Sheet is empty or has only headers');
+    headers=rows[0];
+    allData=rows.slice(1).filter(r=>r.some(c=>c.length>0));
+    loaded=true;
+    setStatus('live',`${allData.length} records loaded`);
+    return true;
+  }catch(e){
+    setStatus('err','Load failed');
+    showAlert('err',`${e.message}`);
+    return false;
+  }
+}
+
+function parseEmails(raw){
+  return[...new Set(raw.split(/[\n,;]+/).map(e=>e.trim().toLowerCase()).filter(e=>e.includes('@')&&e.includes('.')))];
+}
+
+function setLoading(on){
+  const b=$('sbtn'),p=$('prog');
+  if(on){b.innerHTML='<span class="spinner"></span>Searching…';b.disabled=true;p.style.width='65%';}
+  else{b.innerHTML='Search';b.disabled=false;p.style.width='100%';setTimeout(()=>p.style.width='0%',400);}
+}
+
+async function doSearch(){
+  $('alert-area').innerHTML='';
+  const emails=parseEmails($('ei').value);
+  if(!emails.length){showAlert('warn','Please enter at least one valid email address.');return;}
+  setLoading(true);
+  if(!loaded){const ok=await loadSheet();if(!ok){setLoading(false);return;}}
+  _found=[];_nf=[];
+  // Auto-detect email column: find column with most @ symbols
+  const colScores={};
+  allData.slice(0,100).forEach(r=>r.forEach((c,i)=>{if((c||'').includes('@'))colScores[i]=(colScores[i]||0)+1;}));
+  let emailColIdx=EMAIL_COL;
+  if(Object.keys(colScores).length){
+    emailColIdx=parseInt(Object.entries(colScores).sort((a,b)=>b[1]-a[1])[0][0]);
+  }
+
+  const clean=s=>(s||'').toLowerCase().replace(/[\s\u200b\ufeff]+/g,'');
+  emails.forEach(email=>{
+    const cleanEmail=clean(email);
+    const rows=allData.filter(r=>{
+      // check detected email col first
+      if(clean(r[emailColIdx])===cleanEmail) return true;
+      // fallback: check every cell in the row
+      return r.some(cell=>clean(cell)===cleanEmail);
+    });
+    if(rows.length) rows.forEach(row=>_found.push({email,row}));
+    else _nf.push(email);
+  });
+  setLoading(false);
+  renderStats(emails);
+  renderOutput();
+}
+
+function renderStats(q){
+  $('stats-area').style.display='block';
+  $('stats').innerHTML=`
+    <div class="stat"><div class="stat-l">Queried</div><div class="stat-v">${q.length}</div><div class="stat-s">email${q.length!==1?'s':''}</div></div>
+    <div class="stat"><div class="stat-l">Found</div><div class="stat-v" style="color:var(--accent)">${_found.length}</div><div class="stat-s">record${_found.length!==1?'s':''}</div></div>
+    <div class="stat"><div class="stat-l">Not Found</div><div class="stat-v" style="color:${_nf.length?'var(--err)':'var(--faint)'}">${_nf.length}</div><div class="stat-s">email${_nf.length!==1?'s':''}</div></div>
+    <div class="stat"><div class="stat-l">Columns</div><div class="stat-v">${headers.length}</div><div class="stat-s">data fields</div></div>`;
+}
+
+function renderOutput(){
+  const out=$('output');
+  if(!_found.length&&!_nf.length){out.innerHTML=emptyHTML('No results','None of the emails matched any records.');return;}
+  out.innerHTML=`
+    <div class="toolbar">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:500">Results</span>
+        ${_found.length?`<span class="badge bg">${_found.length} record${_found.length!==1?'s':''}</span>`:''}
+        ${_nf.length?`<span class="badge br">${_nf.length} not found</span>`:''}
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="view-toggle">
+          <button class="vt ${viewMode==='card'?'on':''}" onclick="switchView('card')">Cards</button>
+          <button class="vt ${viewMode==='table'?'on':''}" onclick="switchView('table')">Table</button>
+        </div>
+        ${_found.length?`<button class="exp-btn" onclick="exportCSV()">Export CSV</button>`:''}
+      </div>
+    </div>
+    <div id="rc"></div>`;
+  renderCards();
+}
+
+function renderCards(){
+  const rc=document.getElementById('rc');if(!rc)return;
+  if(viewMode==='card'){
+    let h='<div class="records">';
+    _found.forEach(({email,row},idx)=>{
+      h+=`<div class="rec-card"><div class="rec-hdr"><span class="rec-email">${esc(email)}</span><span class="rec-n">Record ${idx+1} of ${_found.length}</span></div><div class="rec-grid">`;
+      headers.forEach((hdr,i)=>{
+        const val=(row[i]||'').trim();
+        const isE=i===EMAIL_COL;
+        const disp=val?(isE?`<div class="rec-v ev">${esc(val)}</div>`:`<div class="rec-v">${esc(val)}</div>`):`<div class="rec-v em">—</div>`;
+        h+=`<div class="rec-f"><div class="rec-k">${esc(hdr||'Col '+(i+1))}</div>${disp}</div>`;
+      });
+      h+='</div></div>';
+    });
+    _nf.forEach(email=>{
+      h+=`<div class="nf-card"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="7"/><path d="M8 5v3M8 11v.5"/></svg><span>No record found for <code>${esc(email)}</code></span></div>`;
+    });
+    h+='</div>';
+    rc.innerHTML=h;
+  } else {
+    let th='<tr><th>#</th>';
+    headers.forEach((h,i)=>th+=`<th>${esc(h||'Col '+(i+1))}</th>`);
+    th+='</tr>';
+    let tb='';
+    _found.forEach(({row},idx)=>{
+      tb+=`<tr><td style="color:var(--faint);font-size:11px">${idx+1}</td>`;
+      // pad row to headers length
+      for(let i=0;i<headers.length;i++){
+        const v=row[i]||'';
+        tb+=`<td title="${esc(v)}" ${i===EMAIL_COL?'class="tbl-em"':''}>${esc(v)}</td>`;
+      }
+      tb+='</tr>';
+    });
+    _nf.forEach(email=>{
+      tb+=`<tr style="background:var(--err-bg)"><td style="color:var(--faint)">—</td><td colspan="${headers.length}" style="color:var(--err);font-size:12px"><strong>Not found:</strong> ${esc(email)}</td></tr>`;
+    });
+    rc.innerHTML=`<div class="rec-card"><div class="tbl-wrap"><table><thead>${th}</thead><tbody>${tb}</tbody></table></div></div>`;
+  }
+}
+
+function switchView(mode){
+  viewMode=mode;
+  document.querySelectorAll('.vt').forEach(b=>b.classList.toggle('on',
+    (mode==='card'&&b.textContent==='Cards')||(mode==='table'&&b.textContent==='Table')));
+  renderCards();
+}
+
+function clearAll(){
+  $('ei').value='';$('alert-area').innerHTML='';
+  $('stats-area').style.display='none';$('output').innerHTML='';
+  _found=[];_nf=[];
+}
+
+function exportCSV(){
+  if(!_found.length)return;
+  const rows=[headers.map(h=>`"${String(h).replace(/"/g,'""')}"`).join(',')];
+  _found.forEach(({row})=>rows.push(row.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')));
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='lookup_results.csv';a.click();
+  URL.revokeObjectURL(url);
+}
+
+function emptyHTML(t,s){
+  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r)"><div class="empty"><div class="ei"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div><div class="et">${t}</div><div class="es">${s}</div></div></div>`;
+}
+
+$('ei').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))doSearch();});
+loadSheet();
+</script>
+</body>
+</html>
